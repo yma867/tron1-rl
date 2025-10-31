@@ -7,13 +7,11 @@
 2. Install pytorch 1.10 with cuda-12.1:
     - `pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 --index-url https://download.pytorch.org/whl/cu121`
 3. Install Isaac Gym
-   - (Download and install Isaac Gym Preview 3 (Preview 2 will not work!) from https://developer.nvidia.com/isaac-gym)
    - `cd isaacgym/isaacgym/python && pip install -e .`
    - Try running an example `cd examples && python 1080_balls_of_solitude.py`
    - For troubleshooting check docs `isaacgym/docs/index.html`) 
 4. Install legged_gym
-    - Clone this repository
-   - `cd ~/TRON1-RL-ISAACGYM-WALK && pip install -e .`
+   - `cd tron1-rl && pip install -e .`
 5. Install tensorboard
    - `pip install tensorboard`
 
@@ -24,14 +22,12 @@
 4. Tasks must be registered using `task_registry.register(name, EnvClass, EnvConfig, TrainConfig)`. This is done in `envs/__init__.py`, but can also be done from outside of this repository.  
 
 ### Usage ###
-0. `cd TRON1-RL-ISAACGYM-walk && source setup_env.sh` 设置环境变量
+0. `cd tron1-rl && source setup_env.sh` 设置环境变量
 
 1. Train(limx_arm):
 
-    ````
-    python legged_gym/scripts/train.py --task=limx_arm --headless
-    ```
-    ```
+    `python legged_gym/scripts/train.py --task=limx_arm --headless`
+   
     -  To run on CPU add following arguments: `--sim_device=cpu`, `--rl_device=cpu` (sim on CPU and rl on GPU is possible).
     -  To run headless (no rendering) add `--headless`.
     - **Important**: To improve performance, once the training starts press `v` to stop the rendering. You can then enable it later to check the progress.
@@ -47,10 +43,17 @@
      - --seed SEED:  Random seed.
      - --max_iterations MAX_ITERATIONS:  Maximum number of training iterations.
 2. Play a trained policy:  
-  ```python legged_gym/scripts/play.py --task=pointfoot_flat --load_run your_model_path --checkpoint your_checkpoint```
-    - `load_run` is the folder name which contains your training results, for example `Apr18_15-48-46_`
-    - `checkpoint` is the number of training iteration, for example the checkpoint of `model_10000.pt` is 10000.
+   `python legged_gym/scripts/play.py --task=limx_arm --load_run your_model_path --checkpoint your_checkpoint`  
+     - --load_run is the folder name which contains your training results, for example `Apr18_15-48-46_`
+     - --checkpoint is the number of training iteration, for example the checkpoint of `model_10000.pt` is 10000.
+3. Export policy as onnx:  
 
+```python legged_gym/scripts/export_policy_as_onnx.py --task=limx_arm --load_run your_model_path --checkpoint your_checkpoint```
+
+4. Terrain change:  
+   `mesh_type = 'gap' # none, plane, heightfield or trimesh or competition or gap`   
+   -`competition` contains 7 different terrains  
+   -`gap` is for bridge task
 
 ### Known Issues ###
 1. The contact forces reported by `net_contact_force_tensor` are unreliable when simulating on GPU with a triangle mesh terrain. A workaround is to use force sensors, but the force are propagated through the sensors of consecutive bodies resulting in an undesireable behaviour. However, for a legged robot it is possible to add sensors to the feet/end effector only and get the expected results. When using the force sensors make sure to exclude gravity from trhe reported forces with `sensor_options.enable_forward_dynamics_forces`. Example:
@@ -77,28 +80,10 @@
 
 ## Acknowledgment
 
-The implementation of Humanoid-Gym relies on resources from [legged_gym](https://github.com/leggedrobotics/legged_gym) and [rsl_rl](https://github.com/leggedrobotics/rsl_rl) projects, created by the Robotic Systems Lab. We specifically utilize the `LeggedRobot` implementation from their research to enhance our codebase.
-
-## Any Questions?
-
-If you have any more questions, please create an issue in this repository.
-
-
+The implementation of Humanoid-Gym relies on resources from [legged_gym](https://github.com/leggedrobotics/legged_gym) and [rsl_rl](https://github.com/leggedrobotics/rsl_rl) projects, created by the Robotic Systems Lab. We specifically utilize the `LeggedRobot` implementation from their research to enhance our codebase.  
+Cite `https://github.com/limxdynamics/tron1-rl-isaacgym.git`
 
 
 
 # Notes #
-Oct24_17-05-56_
-减小torque相关的限制
-torques = -0.00004 # -0.00008
-power = -1e-4 # -2e-4
-soft_torque_limit = 0.9 # 0.8
----走得更稳了，但sim2sim腿还是会叉开，机身左右晃动比较大
-
-
-增加延迟和腿分开惩罚
-本体感知延迟 - 角速度、重力、关节位置/速度都有10-30ms的随机延迟
-IMU偏移 - ±1.2度的随机IMU安装偏移
-动作执行延迟 - 0-20ms的动作执行延迟（原有）
-双脚距离约束 - 既惩罚过近（<0.2m）也惩罚过远（>0.5m）_reward_feet_distance(self)
-从头开始训
+stable walk model: Oct24_17-05-56_/model_20000.pt
